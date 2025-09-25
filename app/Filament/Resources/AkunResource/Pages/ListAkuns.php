@@ -26,32 +26,7 @@ class ListAkuns extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Semua')
-                ->badge(fn () => $this->getModel()::forUser()->count()),
-
-            'aktif' => Tab::make('Aktif')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('aktif', true))
-                ->badge(fn () => $this->getModel()::forUser()->where('aktif', true)->count()),
-
-            'bank' => Tab::make('Bank')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('tipe', Akun::TIPE_BANK))
-                ->badge(fn () => $this->getModel()::forUser()->where('tipe', Akun::TIPE_BANK)->count()),
-
-            'kas' => Tab::make('Kas')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('tipe', Akun::TIPE_KAS))
-                ->badge(fn () => $this->getModel()::forUser()->where('tipe', Akun::TIPE_KAS)->count()),
-
-            'ewallet' => Tab::make('E-Wallet')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('tipe', Akun::TIPE_E_WALLET))
-                ->badge(fn () => $this->getModel()::forUser()->where('tipe', Akun::TIPE_E_WALLET)->count()),
-
-            'investasi' => Tab::make('Investasi')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('tipe', Akun::TIPE_INVESTASI))
-                ->badge(fn () => $this->getModel()::forUser()->where('tipe', Akun::TIPE_INVESTASI)->count()),
-
-            'kredit' => Tab::make('Kredit')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('tipe', Akun::TIPE_KREDIT))
-                ->badge(fn () => $this->getModel()::forUser()->where('tipe', Akun::TIPE_KREDIT)->count()),
+            // Bisa ditambahkan tab di sini jika diperlukan
         ];
     }
 

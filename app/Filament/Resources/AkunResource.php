@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AkunResource\Pages;
 use App\Models\Akun;
 use App\Services\AkunService;
-use App\Helpers\ValidationMessages;
 use Filament\Forms;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
@@ -15,7 +14,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -51,15 +49,10 @@ class AkunResource extends Resource
                     ->schema([
                         TextInput::make('nama')
                             ->label('Nama Akun')
-                            ->required()
-                            ->minLength(2)
-                            ->maxLength(255)
-                            ->placeholder('Masukkan nama akun')
-                            ->validationMessages(ValidationMessages::akunField('nama')),
+                            ->placeholder('Masukkan nama akun'),
 
                         Select::make('tipe')
                             ->label('Tipe Akun')
-                            ->required()
                             ->options(Akun::getTipeOptions())
                             ->live() // Untuk trigger perubahan form
                             ->afterStateUpdated(function (callable $set, $state) {
@@ -72,18 +65,14 @@ class AkunResource extends Resource
                                     $set('nama_bank', null);
                                     $set('nomor_rekening', null);
                                 }
-                            })
-                            ->validationMessages(ValidationMessages::akunField('tipe')),
+                            }),
 
                         TextInput::make('saldo_awal')
                             ->label('Saldo Awal')
                             ->numeric()
                             ->default(0)
                             ->prefix('Rp')
-                            ->placeholder('0')
-                            ->minValue(0)
-                            ->maxValue(999999999999.99)
-                            ->validationMessages(ValidationMessages::akunField('saldo_awal')),
+                            ->placeholder('0'),
                     ])
                     ->columns(2),
 
@@ -91,17 +80,11 @@ class AkunResource extends Resource
                     ->schema([
                         TextInput::make('nama_bank')
                             ->label('Nama Bank')
-                            ->maxLength(100)
-                            ->placeholder('Contoh: BCA, Mandiri, BNI')
-                            ->required(fn (Get $get): bool => in_array($get('tipe'), [Akun::TIPE_BANK, Akun::TIPE_KREDIT]))
-                            ->validationMessages(ValidationMessages::akunField('nama_bank')),
+                            ->placeholder('Contoh: BCA, Mandiri, BNI'),
 
                         TextInput::make('nomor_rekening')
                             ->label('Nomor Rekening')
-                            ->maxLength(50)
-                            ->placeholder('Masukkan nomor rekening')
-                            ->required(fn (Get $get): bool => in_array($get('tipe'), [Akun::TIPE_BANK, Akun::TIPE_KREDIT]))
-                            ->validationMessages(ValidationMessages::akunField('nomor_rekening')),
+                            ->placeholder('Masukkan nomor rekening'),
                     ])
                     ->columns(2)
                     ->visible(fn (Get $get): bool => in_array($get('tipe'), [Akun::TIPE_BANK, Akun::TIPE_KREDIT])),
@@ -110,43 +93,29 @@ class AkunResource extends Resource
                     ->schema([
                         TextInput::make('nama_ewallet')
                             ->label('Nama E-Wallet')
-                            ->maxLength(50)
-                            ->placeholder('Contoh: GoPay, OVO, Dana')
-                            ->required(fn (Get $get): bool => $get('tipe') === Akun::TIPE_E_WALLET)
-                            ->validationMessages(ValidationMessages::akunField('nama_ewallet')),
+                            ->placeholder('Contoh: GoPay, OVO, Dana'),
 
                         TextInput::make('nomor_hp')
-                            ->label('Nomor HP')
+                            ->label('Nomor HP Terhubung')
                             ->tel()
-                            ->maxLength(20)
-                            ->placeholder('Contoh: 08123456789')
-                            ->regex('/^(\+62|0)[0-9]{8,13}$/')
-                            ->required(fn (Get $get): bool => $get('tipe') === Akun::TIPE_E_WALLET)
-                            ->validationMessages(ValidationMessages::akunField('nomor_hp')),
+                            ->placeholder('Contoh: 081234567890'),
                     ])
                     ->columns(2)
                     ->visible(fn (Get $get): bool => $get('tipe') === Akun::TIPE_E_WALLET),
 
-                Forms\Components\Section::make('Pengaturan Tambahan')
+                Forms\Components\Section::make('Lainnya')
                     ->schema([
                         Textarea::make('deskripsi')
                             ->label('Deskripsi')
-                            ->maxLength(500)
-                            ->placeholder('Deskripsi opsional untuk akun ini')
-                            ->rows(3)
-                            ->columnSpanFull()
-                            ->validationMessages(ValidationMessages::akunField('deskripsi')),
+                            ->placeholder('Opsional: deskripsi singkat tentang akun'),
 
                         ColorPicker::make('warna')
                             ->label('Warna')
-                            ->default('#6B7280')
-                            ->validationMessages(ValidationMessages::akunField('warna')),
+                            ->default('#6B7280'),
 
                         Toggle::make('aktif')
                             ->label('Status Aktif')
-                            ->default(true)
-                            ->helperText('Nonaktifkan jika akun sudah tidak digunakan')
-                            ->validationMessages(ValidationMessages::akunField('aktif')),
+                            ->default(true),
                     ])
                     ->columns(2),
             ]);

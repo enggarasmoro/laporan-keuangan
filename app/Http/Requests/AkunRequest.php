@@ -3,12 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Models\Akun;
-use App\Helpers\ValidationMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
-class CreateAkunRequest extends FormRequest
+class AkunRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -32,8 +31,8 @@ class CreateAkunRequest extends FormRequest
             'saldo_awal' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
             'nomor_rekening' => [
                 'nullable',
-                'string',
-                'max:50',
+                'numeric',
+                'digits_between:10,16',
                 Rule::requiredIf(function () {
                     return in_array($this->tipe, [Akun::TIPE_BANK, Akun::TIPE_KREDIT]);
                 })
@@ -56,8 +55,7 @@ class CreateAkunRequest extends FormRequest
             ],
             'nomor_hp' => [
                 'nullable',
-                'string',
-                'max:20',
+                'numeric',
                 'regex:/^(\+62|0)[0-9]{8,13}$/',
                 Rule::requiredIf(function () {
                     return $this->tipe === Akun::TIPE_E_WALLET;
@@ -71,7 +69,45 @@ class CreateAkunRequest extends FormRequest
 
     public function messages(): array
     {
-        return ValidationMessages::akun();
+        return [
+            'nama.required' => 'Nama akun harus diisi.',
+            'nama.min' => 'Nama akun minimal 2 karakter.',
+            'nama.max' => 'Nama akun maksimal 255 karakter.',
+            'tipe.required' => 'Tipe akun harus dipilih.',
+            'tipe.in' => 'Tipe akun tidak valid.',
+            'saldo_awal.numeric' => 'Saldo awal harus berupa angka.',
+            'saldo_awal.min' => 'Saldo awal tidak boleh negatif.',
+            'saldo_awal.max' => 'Saldo awal terlalu besar.',
+            'nomor_rekening.required' => 'Nomor rekening harus diisi untuk akun bank/kredit.',
+            'nomor_rekening.digits_between' => 'Nomor rekening harus terdiri dari 10-16 digit.',
+            'nomor_rekening.numeric' => 'Nomor rekening harus berupa angka.',
+            'nama_bank.required' => 'Nama bank harus diisi untuk akun bank/kredit.',
+            'nama_bank.max' => 'Nama bank maksimal 100 karakter.',
+            'nama_ewallet.required' => 'Nama e-wallet harus diisi untuk akun e-wallet.',
+            'nama_ewallet.max' => 'Nama e-wallet maksimal 50 karakter.',
+            'nomor_hp.required' => 'Nomor HP harus diisi untuk akun e-wallet.',
+            'nomor_hp.regex' => 'Format nomor HP tidak valid. Gunakan format: 08xxx atau +62xxx.',
+            'nomor_hp.numeric' => 'Nomor HP harus berupa angka.',
+            'deskripsi.max' => 'Deskripsi maksimal 500 karakter.',
+            'warna.regex' => 'Format warna tidak valid. Gunakan format hex (#RRGGBB).',
+            'aktif.boolean' => 'Status aktif harus berupa boolean.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'nama' => 'Nama Akun',
+            'tipe' => 'Tipe Akun',
+            'saldo_awal' => 'Saldo Awal',
+            'nomor_rekening' => 'Nomor Rekening',
+            'nama_bank' => 'Nama Bank',
+            'nama_ewallet' => 'Nama E-Wallet',
+            'nomor_hp' => 'Nomor HP',
+            'deskripsi' => 'Deskripsi',
+            'warna' => 'Warna',
+            'aktif' => 'Status Aktif',
+        ];
     }
 
     protected function prepareForValidation(): void
