@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Akun;
+use App\Models\Kategori;
 use App\Policies\AkunPolicy;
+use App\Policies\KategoriPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -15,6 +17,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Akun::class => AkunPolicy::class,
+        Kategori::class => KategoriPolicy::class,
     ];
 
     /**
