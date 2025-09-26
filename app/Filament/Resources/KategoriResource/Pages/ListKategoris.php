@@ -25,20 +25,7 @@ class ListKategoris extends ListRecords
     public function getTabs(): array
     {
         return [
-            'semua' => Tab::make('Semua Kategori')
-                ->badge($this->getModel()::forUser()->count()),
-
-            'pemasukan' => Tab::make('Pemasukan')
-                ->modifyQueryUsing(fn (Builder $query) => $query->byType(Kategori::TIPE_PEMASUKAN))
-                ->badge($this->getModel()::forUser()->byType(Kategori::TIPE_PEMASUKAN)->count()),
-
-            'pengeluaran' => Tab::make('Pengeluaran')
-                ->modifyQueryUsing(fn (Builder $query) => $query->byType(Kategori::TIPE_PENGELUARAN))
-                ->badge($this->getModel()::forUser()->byType(Kategori::TIPE_PENGELUARAN)->count()),
-
-            'aktif' => Tab::make('Aktif')
-                ->modifyQueryUsing(fn (Builder $query) => $query->active())
-                ->badge($this->getModel()::forUser()->active()->count()),
+            // Bisa ditambahkan tab di sini jika diperlukan
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Kategori;
 use App\Models\User;
+use App\Repositories\KategoriRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 class KategoriService
 {
+    protected $kategoriRepository;
+
+    public function __construct(KategoriRepository $kategoriRepository)
+    {
+        $this->kategoriRepository = $kategoriRepository;
+    }
     /**
      * Get all categories for the authenticated user
      */
@@ -18,17 +25,15 @@ class KategoriService
     {
         $user = $user ?? Auth::user();
 
-        $query = Kategori::forUser($user->id);
-
-        if ($activeOnly) {
-            $query->active();
+        if ($tipe && $activeOnly) {
+            return $this->kategoriRepository->getActiveByTipeWithIcon($tipe, $user->id);
+        } elseif ($tipe) {
+            return $this->kategoriRepository->getByTipe($tipe, $user->id);
+        } elseif ($activeOnly) {
+            return $this->kategoriRepository->getActiveForUser($user->id);
         }
 
-        if ($tipe) {
-            $query->byType($tipe);
-        }
-
-        return $query->orderBy('nama')->get();
+        return $this->kategoriRepository->getAllForUser($user->id);
     }
 
     /**
@@ -38,10 +43,7 @@ class KategoriService
     {
         $user = $user ?? Auth::user();
 
-        return Kategori::forUser($user->id)
-            ->orderBy('aktif', 'desc')
-            ->orderBy('nama')
-            ->paginate($perPage);
+        return $this->kategoriRepository->getPaginated($perPage, $user->id);
     }
 
     /**
@@ -58,7 +60,7 @@ class KategoriService
         $data = $this->setDefaults($data);
 
         return DB::transaction(function () use ($data) {
-            return Kategori::create($data);
+            return $this->kategoriRepository->create($data);
         });
     }
 
@@ -133,11 +135,7 @@ class KategoriService
     {
         $user = $user ?? Auth::user();
 
-        return Kategori::forUser($user->id)
-            ->where('tipe', $type)
-            ->active()
-            ->orderBy('nama')
-            ->get();
+        return $this->kategoriRepository->getActiveByTipeWithIcon($type, $user->id);
     }
 
     /**

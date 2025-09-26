@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Akun;
 
 use App\Models\Akun;
 use App\Services\AkunService;

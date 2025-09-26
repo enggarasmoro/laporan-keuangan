@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\KategoriResource\Pages;
+use App\Filament\Tables\KategoriTable;
 use App\Models\Kategori;
 use App\Services\KategoriService;
 use Filament\Forms;
@@ -141,68 +142,13 @@ class KategoriResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                ColorColumn::make('warna')
-                    ->label('')
-                    ->width(20),
-
-                TextColumn::make('icon')
-                    ->label('Icon')
-                    ->default('—')
-                    ->alignCenter()
-                    ->size('lg'),
-
-                TextColumn::make('nama')
-                    ->label('Nama Kategori')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
-
-                TextColumn::make('tipe')
-                    ->label('Tipe')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        Kategori::TIPE_PEMASUKAN => 'success',
-                        Kategori::TIPE_PENGELUARAN => 'danger',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => Kategori::getTipeOptions()[$state] ?? $state),
-
-                TextColumn::make('deskripsi')
-                    ->label('Deskripsi')
-                    ->limit(50)
-                    ->placeholder('—')
-                    ->toggleable(),
-
-                IconColumn::make('aktif')
-                    ->label('Status')
-                    ->boolean()
-                    ->sortable(),
-
-                TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime('d M Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                TextColumn::make('updated_at')
-                    ->label('Diubah')
-                    ->dateTime('d M Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                SelectFilter::make('tipe')
-                    ->label('Tipe Kategori')
-                    ->options(Kategori::getTipeOptions()),
-
-                SelectFilter::make('aktif')
-                    ->label('Status')
-                    ->options([
-                        1 => 'Aktif',
-                        0 => 'Tidak Aktif',
-                    ]),
-            ])
+            ->columns(KategoriTable::make())
+            ->filters(KategoriTable::getFilters())
+            ->defaultSort(KategoriTable::getDefaultSort(), KategoriTable::getDefaultSortDirection())
+            ->paginated([10, 25, 50, 100])
+            ->emptyStateHeading(KategoriTable::getEmptyStateHeading())
+            ->emptyStateDescription(KategoriTable::getEmptyStateDescription())
+            ->emptyStateIcon(KategoriTable::getEmptyStateIcon())
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Kategori;
 
 use App\Models\Kategori;
 use App\Services\KategoriService;

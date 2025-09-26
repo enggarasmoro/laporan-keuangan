@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Akun;
 use App\Models\User;
+use App\Repositories\AkunRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,13 @@ use Illuminate\Support\Facades\DB;
 
 class AkunService
 {
+    protected $akunRepository;
+
+    public function __construct(AkunRepository $akunRepository)
+    {
+        $this->akunRepository = $akunRepository;
+    }
+
     /**
      * Get all accounts for the authenticated user
      */
@@ -18,13 +26,11 @@ class AkunService
     {
         $user = $user ?? Auth::user();
 
-        $query = Akun::forUser($user->id);
-
         if ($activeOnly) {
-            $query->active();
+            return $this->akunRepository->getActiveForUser($user->id);
         }
 
-        return $query->orderBy('nama')->get();
+        return $this->akunRepository->getAllForUser($user->id);
     }
 
     /**
@@ -34,10 +40,7 @@ class AkunService
     {
         $user = $user ?? Auth::user();
 
-        return Akun::forUser($user->id)
-            ->orderBy('aktif', 'desc')
-            ->orderBy('nama')
-            ->paginate($perPage);
+        return $this->akunRepository->getPaginated($perPage, $user->id);
     }
 
     /**
@@ -57,12 +60,12 @@ class AkunService
         $data = $this->cleanFieldsByType($data);
 
         return DB::transaction(function () use ($data) {
-            $akun = Akun::create($data);
+            // Ensure saldo_saat_ini matches saldo_awal on creation
+            $data['saldo_saat_ini'] = $data['saldo_awal'] ?? 0;
 
-            // Update saldo_saat_ini to match saldo_awal
-            $akun->update(['saldo_saat_ini' => $akun->saldo_awal]);
+            $akun = $this->akunRepository->create($data);
 
-            return $akun->fresh();
+            return $akun;
         });
     }
 
@@ -86,7 +89,17 @@ class AkunService
         $data = $this->cleanFieldsByType($data);
 
         return DB::transaction(function () use ($akun, $data) {
+            // Check if saldo_awal is being updated
+            $saldoAwalChanged = isset($data['saldo_awal']) && $data['saldo_awal'] != $akun->saldo_awal;
+
             $akun->update($data);
+
+            // If saldo_awal changed, update saldo_saat_ini to match
+            // TODO: In future, calculate saldo_saat_ini based on transactions
+            if ($saldoAwalChanged) {
+                $akun->update(['saldo_saat_ini' => $data['saldo_awal']]);
+            }
+
             return $akun->fresh();
         });
     }
@@ -140,11 +153,9 @@ class AkunService
     {
         $user = $user ?? Auth::user();
 
-        return Akun::forUser($user->id)
-            ->where('tipe', $type)
-            ->active()
-            ->orderBy('nama')
-            ->get();
+        return $this->akunRepository->getByTipe($type, $user->id)
+                                   ->where('aktif', true)
+                                   ->sortBy('nama');
     }
 
     /**
@@ -160,6 +171,49 @@ class AkunService
         $akun->update(['aktif' => !$akun->aktif]);
 
         return $akun->fresh();
+    }
+
+    /**
+     * Update account balance (saldo_awal and saldo_saat_ini)
+     */
+    public function updateAccountBalance(Akun $akun, float $newBalance): Akun
+    {
+        // Verify ownership
+        if ($akun->user_id !== Auth::id()) {
+            throw new \Exception('Unauthorized access to account');
+        }
+
+        return DB::transaction(function () use ($akun, $newBalance) {
+            $this->akunRepository->updateBalance($akun->id, $newBalance, $newBalance, $akun->user_id);
+
+            return $akun->fresh();
+        });
+    }
+
+    /**
+     * Recalculate saldo_saat_ini based on transactions
+     * TODO: Implement when Transaksi model is available
+     */
+    public function recalculateCurrentBalance(Akun $akun): Akun
+    {
+        // Verify ownership
+        if ($akun->user_id !== Auth::id()) {
+            throw new \Exception('Unauthorized access to account');
+        }
+
+        return DB::transaction(function () use ($akun) {
+            // TODO: Implement when Transaksi model is created
+            // $totalTransactions = $akun->transaksis()
+            //     ->selectRaw('SUM(CASE WHEN tipe = "pemasukan" THEN jumlah ELSE -jumlah END) as total')
+            //     ->value('total') ?? 0;
+            //
+            // $newSaldoSaatIni = $akun->saldo_awal + $totalTransactions;
+
+            // For now, just sync with saldo_awal
+            $akun->update(['saldo_saat_ini' => $akun->saldo_awal]);
+
+            return $akun->fresh();
+        });
     }
 
     /**
